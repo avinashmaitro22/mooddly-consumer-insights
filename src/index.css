@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+  background: #080808;
+}
+
+body {
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Hide scrollbars but keep scroll. */
+body {
+  scrollbar-width: thin;
+  scrollbar-color: #222222 #080808;
+}
+body::-webkit-scrollbar {
+  width: 8px;
+}
+body::-webkit-scrollbar-thumb {
+  background: #222222;
+  border-radius: 8px;
+}
+
+/* Focus ring for accessibility. */
+:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 2px;
+}
+
+/* Range input track reset. */
+input[type="range"]::-webkit-slider-runnable-track {
+  background: transparent;
+}
+input[type="range"]::-moz-range-track {
+  background: transparent;
+}
