@@ -1,4 +1,4 @@
-import {
+import React, {
   createContext,
   useCallback,
   useContext,
@@ -393,7 +393,9 @@ export function SurveyProvider({ children }: Props) {
     validationError,
   };
 
-  return (
-    <SurveyContext.Provider value={value}>{children}</SurveyContext.Provider>
+    return React.createElement(
+    SurveyContext.Provider,
+    { value },
+    children
   );
 }
