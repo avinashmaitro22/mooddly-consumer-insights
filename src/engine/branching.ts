@@ -3,11 +3,6 @@ import type { SurveyAnswers } from "./surveyState";
 
 export type AnswerValue = string | string[] | number | null | undefined;
 
-function normalize(v: AnswerValue): AnswerValue {
-  if (Array.isArray(v)) return v.slice().sort();
-  return v;
-}
-
 function isEqual(a: AnswerValue, b: unknown): boolean {
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false;
