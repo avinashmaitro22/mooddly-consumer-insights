@@ -25,10 +25,25 @@ export function Consent() {
       fire("consent_given");
       fire("survey_started");
       jumpToStage("survey");
-    } catch (e) {
-      console.error(e);
-      setError("Couldn't start the survey. Please try again.");
-    } finally {
+   } catch (e: unknown) {
+  console.error("[survey start error]", e);
+
+  if (e instanceof Error) {
+    setError(`Couldn't start the survey: ${e.message}`);
+  } else if (
+    typeof e === "object" &&
+    e !== null &&
+    "message" in e
+  ) {
+    setError(
+      `Couldn't start the survey: ${String(
+        (e as { message: unknown }).message
+      )}`
+    );
+  } else {
+    setError("Couldn't start the survey. Please try again.");
+  }
+} finally {
       setLoading(false);
     }
   };
