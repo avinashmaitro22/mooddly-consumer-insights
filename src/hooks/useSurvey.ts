@@ -23,7 +23,6 @@ import {
 import { validateAnswer } from "@/engine/validation";
 import {
   CONCEPT_AFTER_QUESTION,
-  CONCEPT_BEFORE_QUESTION,
   QUESTIONS,
   SURVEY_SLUG,
   getQuestionByCode,
