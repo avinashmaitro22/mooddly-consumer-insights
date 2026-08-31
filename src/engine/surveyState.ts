@@ -2,7 +2,7 @@ import { QUESTIONS } from "@/config/survey";
 
 export type SurveyAnswers = Record<
   string,
-  string | string[] | number | { [key: string]: unknown }
+  string | string[] | number | { [key: string]: unknown } | undefined
 >;
 
 export type SurveyState = {
