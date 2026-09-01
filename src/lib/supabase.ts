@@ -3,6 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
+console.log("SUPABASE URL:", supabaseUrl);
+console.log(
+  "SUPABASE KEY EXISTS:",
+  Boolean(supabaseAnonKey)
+);
+
 if (!supabaseUrl || !supabaseAnonKey) {
   // Fail loudly at startup so missing env vars don't silently break the app.
   throw new Error(
