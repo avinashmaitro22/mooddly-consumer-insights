@@ -169,9 +169,39 @@ export function SurveyProvider({ children }: Props) {
   }, []);
 
   const jumpToStage = useCallback((stage: SurveyState["stage"]) => {
-    setState((s) => ({ ...s, stage, lastActivity: new Date().toISOString() }));
-  }, []);
+  setState((s) => {
+    // Leaving the concept interlude must advance past the question
+    // that triggered the interlude.
+    if (stage === "survey" && s.stage === "concept") {
+      const next = getNextQuestionCode(
+        CONCEPT_AFTER_QUESTION,
+        s.answers
+      );
 
+      if (!next) {
+        return {
+          ...s,
+          stage: "thank-you",
+          completionStatus: "completed",
+          lastActivity: new Date().toISOString(),
+        };
+      }
+
+      return {
+        ...s,
+        stage: "survey",
+        currentQuestionCode: next,
+        lastActivity: new Date().toISOString(),
+      };
+    }
+
+    return {
+      ...s,
+      stage,
+      lastActivity: new Date().toISOString(),
+    };
+  });
+}, []);
   const goNext = useCallback((): { ok: boolean; error?: string } => {
     const code = state.currentQuestionCode;
     if (!code) return { ok: false, error: "No current question." };
