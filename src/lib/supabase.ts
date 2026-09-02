@@ -4,6 +4,15 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 console.log("SUPABASE URL:", supabaseUrl);
+console.log("SUPABASE KEY EXISTS:", Boolean(supabaseAnonKey));
+console.log(
+  "SUPABASE KEY TYPE:",
+  supabaseAnonKey?.startsWith("sb_publishable_")
+    ? "publishable"
+    : "other"
+);
+
+console.log("SUPABASE URL:", supabaseUrl);
 console.log(
   "SUPABASE KEY EXISTS:",
   Boolean(supabaseAnonKey)
