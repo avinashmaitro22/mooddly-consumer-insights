@@ -25,15 +25,32 @@ export function Consent() {
       fire("consent_given");
       fire("survey_started");
       jumpToStage("survey");
-       } catch (e) {
-      console.error("CONSENT / SUPABASE ERROR:", e);
+           } catch (e: unknown) {
+      console.error("SUPABASE ERROR:", e);
 
-      const message =
-        e instanceof Error
-          ? `${e.name}: ${e.message}`
-          : String(e);
+      const error = e as {
+        message?: string;
+        details?: string;
+        hint?: string;
+        code?: string;
+        status?: number;
+      };
 
-      setError(`Couldn't start the survey: ${message}`);
+      const message = [
+        error.message,
+        error.code ? `Code: ${error.code}` : null,
+        error.details ? `Details: ${error.details}` : null,
+        error.hint ? `Hint: ${error.hint}` : null,
+        error.status ? `Status: ${error.status}` : null,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      setError(
+        `Couldn't start the survey: ${
+          message || JSON.stringify(e)
+        }`
+      );
     } finally {
       setLoading(false);
     }
