@@ -25,26 +25,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     detectSessionInUrl: true,
   },
-  global: {
-    fetch: async (input, init) => {
-      console.log("SUPABASE REQUEST:", input);
-
-      try {
-        const response = await fetch(input, init);
-
-        console.log(
-          "SUPABASE RESPONSE:",
-          response.status,
-          response.statusText
-        );
-
-        return response;
-      } catch (error) {
-        console.error("SUPABASE NETWORK FAILURE:", error);
-        throw error;
-      }
-    },
-  },
 });
 
 export type Database = {
