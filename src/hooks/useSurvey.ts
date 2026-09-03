@@ -276,23 +276,44 @@ export function SurveyProvider({ children }: Props) {
 
     const device = detectDevice();
     const utm = state.utm as UTMParams;
-    const { data, error } = await supabase
-      .from("respondents")
-      .insert({
-        session_id: state.sessionId,
-        utm_source: utm.utm_source,
-        utm_medium: utm.utm_medium,
-        utm_campaign: utm.utm_campaign,
-        utm_content: utm.utm_content,
-        source: utm.utm_source ?? utm.campaign ?? null,
-        device,
-        started_at: state.startedAt,
-        completion_status: "in_progress",
-      })
-      .select("id")
-      .single();
+    const response = await fetch(
+  `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/respondents`,
+  {
+    method: "POST",
+    headers: {
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      session_id: state.sessionId,
+      utm_source: utm.utm_source,
+      utm_medium: utm.utm_medium,
+      utm_campaign: utm.utm_campaign,
+      utm_content: utm.utm_content,
+      source: utm.utm_source ?? utm.campaign ?? null,
+      device,
+      started_at: state.startedAt,
+      completion_status: "in_progress",
+    }),
+  }
+);
 
-    if (error) throw error;
+if (!response.ok) {
+  const text = await response.text();
+  throw new Error(
+    `Supabase HTTP ${response.status}: ${text}`
+  );
+}
+
+const rows = (await response.json()) as Array<{ id: string }>;
+
+if (!rows[0]?.id) {
+  throw new Error("Supabase INSERT succeeded but no respondent ID returned.");
+}
+
+const id = rows[0].id;
     const id = (data as { id: string }).id;
     setState((s) => ({ ...s, respondentId: id }));
     return id;
