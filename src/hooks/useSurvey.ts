@@ -314,7 +314,6 @@ if (!rows[0]?.id) {
 }
 
 const id = rows[0].id;
-    const id = (data as { id: string }).id;
     setState((s) => ({ ...s, respondentId: id }));
     return id;
   }, [state]);
