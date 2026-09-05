@@ -227,15 +227,22 @@ export function SurveyProvider({ children }: Props) {
 
     const next = getNextQuestionCode(code, state.answers);
     if (!next) {
-      // Last question — go to thank-you after submit.
-      setState((s) => ({
-        ...s,
-        stage: "thank-you",
-        completionStatus: "completed",
-        lastActivity: new Date().toISOString(),
-      }));
-      return { ok: true };
-    }
+  // Last question — mark the respondent completed in Supabase.
+  setState((s) => ({
+    ...s,
+    stage: "thank-you",
+    completionStatus: "completed",
+    lastActivity: new Date().toISOString(),
+  }));
+
+  if (state.respondentId) {
+    void submitCompletion().catch((e) => {
+      console.error("[completion] failed", e);
+    });
+  }
+
+  return { ok: true };
+}
 
     setState((s) => ({
       ...s,
