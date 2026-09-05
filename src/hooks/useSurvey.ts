@@ -376,8 +376,7 @@ const id = rows[0].id;
   const submitCompletion = useCallback(async () => {
     if (!state.respondentId) return;
     const firedKey = `mooddly:completion-fired:${state.respondentId}`;
-    if (typeof window !== "undefined" && localStorage.getItem(firedKey) === "true") return;
-
+  
     for (const [k, v] of Object.entries(state.answers)) {
       const q = getQuestionByCode(k);
       if (!q) continue;
