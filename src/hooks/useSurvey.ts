@@ -394,11 +394,29 @@ const id = rows[0].id;
       if (error) throw error;
     }
 
-    const { error } = await supabase
-      .from("respondents")
-      .update({ completion_status: "completed", completed_at: new Date().toISOString() })
-      .eq("id", state.respondentId);
-    if (error) throw error;
+    const completionResponse = await fetch(
+  `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/respondents?id=eq.${state.respondentId}`,
+  {
+    method: "PATCH",
+    headers: {
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      completion_status: "completed",
+      completed_at: new Date().toISOString(),
+    }),
+  }
+);
+
+if (!completionResponse.ok) {
+  const text = await completionResponse.text();
+  throw new Error(
+    `Completion update failed: HTTP ${completionResponse.status}: ${text}`
+  );
+}
 
     if (typeof window !== "undefined") localStorage.setItem(firedKey, "true");
     track({
