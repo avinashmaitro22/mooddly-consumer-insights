@@ -400,6 +400,24 @@ const id = rows[0].id;
       properties: { total_questions: visiblePath.length, answered: Object.keys(state.answers).length },
     });
   }, [state, visiblePath.length]);
+}, [state, visiblePath.length]);
+
+const completionStartedRef = useRef<string | null>(null);
+
+useEffect(() => {
+  if (state.stage !== "thank-you" || !state.respondentId) return;
+
+  const respondentId = state.respondentId;
+
+  if (completionStartedRef.current === respondentId) return;
+
+  completionStartedRef.current = respondentId;
+
+  void submitCompletion().catch((e) => {
+    completionStartedRef.current = null;
+    console.error("[completion] failed", e);
+  });
+}, [state.stage, state.respondentId, submitCompletion]);
 
   // Mark abandoned if user leaves mid-survey.
   useEffect(() => {
