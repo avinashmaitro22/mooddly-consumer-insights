@@ -235,15 +235,6 @@ export function SurveyProvider({ children }: Props) {
     lastActivity: new Date().toISOString(),
   }));
 
-  if (state.respondentId) {
-    void submitCompletion().catch((e) => {
-      console.error("[completion] failed", e);
-    });
-  }
-
-  return { ok: true };
-}
-
     setState((s) => ({
       ...s,
       currentQuestionCode: next,
