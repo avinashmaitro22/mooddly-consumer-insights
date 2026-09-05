@@ -407,7 +407,6 @@ const id = rows[0].id;
       properties: { total_questions: visiblePath.length, answered: Object.keys(state.answers).length },
     });
   }, [state, visiblePath.length]);
-}, [state, visiblePath.length]);
 
 const completionStartedRef = useRef<string | null>(null);
 
