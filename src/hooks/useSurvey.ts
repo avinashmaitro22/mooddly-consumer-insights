@@ -402,7 +402,7 @@ const id = rows[0].id;
       apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       "Content-Type": "application/json",
-      Prefer: "return=minimal",
+      Prefer: "return=representation",
     },
     body: JSON.stringify({
       completion_status: "completed",
@@ -417,6 +417,20 @@ if (!completionResponse.ok) {
     `Completion update failed: HTTP ${completionResponse.status}: ${text}`
   );
 }
+
+const updatedRows = (await completionResponse.json()) as Array<{
+  id: string;
+  completion_status: string;
+  completed_at: string | null;
+}>;
+
+if (updatedRows.length === 0) {
+  throw new Error(
+    `Completion update matched 0 respondents. ID: ${state.respondentId}`
+  );
+}
+
+console.log("[completion] SUCCESS:", updatedRows[0]);
 
     if (typeof window !== "undefined") localStorage.setItem(firedKey, "true");
     track({
