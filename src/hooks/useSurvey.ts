@@ -225,22 +225,43 @@ export function SurveyProvider({ children }: Props) {
       return { ok: true };
     }
 
-    const next = getNextQuestionCode(code, state.answers);
-    if (!next) {
-  // Last question — mark the respondent completed in Supabase.
-  setState((s) => ({
-    ...s,
-    stage: "thank-you",
-    completionStatus: "completed",
-    lastActivity: new Date().toISOString(),
-  }));
+    const completionResponse = await fetch(
+  `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/respondents?id=eq.${state.respondentId}`,
+  {
+    method: "PATCH",
+    headers: {
+      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      completion_status: "completed",
+      completed_at: new Date().toISOString(),
+    }),
+  }
+);
 
-    setState((s) => ({
-      ...s,
-      currentQuestionCode: next,
-      lastActivity: new Date().toISOString(),
-    }));
-    return { ok: true };
+if (!completionResponse.ok) {
+  const text = await completionResponse.text();
+  throw new Error(
+    `Completion update failed: HTTP ${completionResponse.status}: ${text}`
+  );
+}
+
+const updatedRows = (await completionResponse.json()) as Array<{
+  id: string;
+  completion_status: string;
+  completed_at: string | null;
+}>;
+
+if (updatedRows.length === 0) {
+  throw new Error(
+    `Completion update matched 0 respondents. ID: ${state.respondentId}`
+  );
+}
+
+console.log("[completion] SUCCESS:", updatedRows[0]);
   }, [state]);
 
   const goBack = useCallback(() => {
@@ -384,44 +405,29 @@ const id = rows[0].id;
       if (error) throw error;
     }
 
-    const completionResponse = await fetch(
-  `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/respondents?id=eq.${state.respondentId}`,
-  {
-    method: "PATCH",
-    headers: {
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
-    body: JSON.stringify({
-      completion_status: "completed",
-      completed_at: new Date().toISOString(),
-    }),
-  }
-);
+    const { data: updatedRespondent, error: completionError } = await supabase
+  .from("respondents")
+  .update({
+    completion_status: "completed",
+    completed_at: new Date().toISOString(),
+  })
+  .eq("id", state.respondentId)
+  .select("id, completion_status, completed_at")
+  .single();
 
-if (!completionResponse.ok) {
-  const text = await completionResponse.text();
+if (completionError) {
   throw new Error(
-    `Completion update failed: HTTP ${completionResponse.status}: ${text}`
+    `Completion update failed: ${completionError.message}`
   );
 }
 
-const updatedRows = (await completionResponse.json()) as Array<{
-  id: string;
-  completion_status: string;
-  completed_at: string | null;
-}>;
-
-if (updatedRows.length === 0) {
+if (!updatedRespondent) {
   throw new Error(
-    `Completion update matched 0 respondents. ID: ${state.respondentId}`
+    `Completion update returned no respondent. ID: ${state.respondentId}`
   );
 }
 
-console.log("[completion] SUCCESS:", updatedRows[0]);
-
+console.log("[completion] SUCCESS:", updatedRespondent);
     if (typeof window !== "undefined") localStorage.setItem(firedKey, "true");
     track({
       respondentId: state.respondentId,
