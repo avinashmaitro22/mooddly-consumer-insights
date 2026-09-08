@@ -391,14 +391,13 @@ export function SurveyProvider({ children }: Props) {
     }
 
     const { data: updatedRespondent, error: completionError } = await supabase
+  .fconst { error: completionError } = await supabase
   .from("respondents")
   .update({
     completion_status: "completed",
     completed_at: new Date().toISOString(),
   })
-  .eq("id", state.respondentId)
-  .select("id, completion_status, completed_at")
-  .single();
+  .eq("id", state.respondentId);
 
 if (completionError) {
   throw new Error(
@@ -406,13 +405,25 @@ if (completionError) {
   );
 }
 
-if (!updatedRespondent) {
+const { data: verifyRespondent, error: verifyError } = await supabase
+  .from("respondents")
+  .select("id, completion_status, completed_at")
+  .eq("id", state.respondentId)
+  .single();
+
+if (verifyError) {
   throw new Error(
-    `Completion update returned no respondent. ID: ${state.respondentId}`
+    `Completion verification failed: ${verifyError.message}`
   );
 }
 
-console.log("[completion] SUCCESS:", updatedRespondent);
+if (verifyRespondent.completion_status !== "completed") {
+  throw new Error(
+    `Completion update did not persist. Status: ${verifyRespondent.completion_status}`
+  );
+}
+
+console.log("[completion] SUCCESS:", verifyRespondent);
     if (typeof window !== "undefined") localStorage.setItem(firedKey, "true");
     track({
       respondentId: state.respondentId,
