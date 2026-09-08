@@ -390,8 +390,7 @@ export function SurveyProvider({ children }: Props) {
       if (error) throw error;
     }
 
-    const { data: updatedRespondent, error: completionError } = await supabase
-  .fconst { error: completionError } = await supabase
+    const { error: completionError } = await supabase
   .from("respondents")
   .update({
     completion_status: "completed",
