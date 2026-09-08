@@ -285,21 +285,14 @@ export function SurveyProvider({ children }: Props) {
   }, [state]);
 
   const ensureRespondent = useCallback(async (): Promise<string> => {
-    if (state.respondentId) return state.respondentId;
+  if (state.respondentId) return state.respondentId;
 
-    const device = detectDevice();
-    const utm = state.utm as UTMParams;
-    const response = await fetch(
-  `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/respondents`,
-  {
-    method: "POST",
-    headers: {
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
-    body: JSON.stringify({
+  const device = detectDevice();
+  const utm = state.utm as UTMParams;
+
+  const { data, error } = await supabase
+    .from("respondents")
+    .insert({
       session_id: state.sessionId,
       utm_source: utm.utm_source,
       utm_medium: utm.utm_medium,
@@ -309,27 +302,25 @@ export function SurveyProvider({ children }: Props) {
       device,
       started_at: state.startedAt,
       completion_status: "in_progress",
-    }),
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    throw new Error(`Respondent creation failed: ${error.message}`);
   }
-);
 
-if (!response.ok) {
-  const text = await response.text();
-  throw new Error(
-    `Supabase HTTP ${response.status}: ${text}`
-  );
-}
+  if (!data?.id) {
+    throw new Error("Respondent created but no ID returned.");
+  }
 
-const rows = (await response.json()) as Array<{ id: string }>;
+  setState((s) => ({
+    ...s,
+    respondentId: data.id,
+  }));
 
-if (!rows[0]?.id) {
-  throw new Error("Supabase INSERT succeeded but no respondent ID returned.");
-}
-
-const id = rows[0].id;
-    setState((s) => ({ ...s, respondentId: id }));
-    return id;
-  }, [state]);
+  return data.id;
+}, [state]);
 
   // Upsert an answer to the DB.
   const upsertAnswer = useCallback(
