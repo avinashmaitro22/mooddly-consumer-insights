@@ -203,66 +203,60 @@ export function SurveyProvider({ children }: Props) {
   });
 }, []);
   const goNext = useCallback((): { ok: boolean; error?: string } => {
-    const code = state.currentQuestionCode;
-    if (!code) return { ok: false, error: "No current question." };
-    const q = getQuestionByCode(code);
-    if (!q) return { ok: false, error: "Unknown question." };
+  const code = state.currentQuestionCode;
 
-    const err = validateAnswer(q, state.answers[code]);
-    if (err) {
-      setValidationError(err.message);
-      return { ok: false, error: err.message };
-    }
-    setValidationError(null);
-
-    // Concept interstitial between Q23 and Q24.
-    if (code === CONCEPT_AFTER_QUESTION) {
-      setState((s) => ({
-        ...s,
-        stage: "concept",
-        lastActivity: new Date().toISOString(),
-      }));
-      return { ok: true };
-    }
-
-    const completionResponse = await fetch(
-  `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/respondents?id=eq.${state.respondentId}`,
-  {
-    method: "PATCH",
-    headers: {
-      apikey: import.meta.env.VITE_SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=representation",
-    },
-    body: JSON.stringify({
-      completion_status: "completed",
-      completed_at: new Date().toISOString(),
-    }),
+  if (!code) {
+    return { ok: false, error: "No current question." };
   }
-);
 
-if (!completionResponse.ok) {
-  const text = await completionResponse.text();
-  throw new Error(
-    `Completion update failed: HTTP ${completionResponse.status}: ${text}`
-  );
-}
+  const q = getQuestionByCode(code);
 
-const updatedRows = (await completionResponse.json()) as Array<{
-  id: string;
-  completion_status: string;
-  completed_at: string | null;
-}>;
+  if (!q) {
+    return { ok: false, error: "Unknown question." };
+  }
 
-if (updatedRows.length === 0) {
-  throw new Error(
-    `Completion update matched 0 respondents. ID: ${state.respondentId}`
-  );
-}
+  const err = validateAnswer(q, state.answers[code]);
 
-console.log("[completion] SUCCESS:", updatedRows[0]);
-  }, [state]);
+  if (err) {
+    setValidationError(err.message);
+    return { ok: false, error: err.message };
+  }
+
+  setValidationError(null);
+
+  // Concept interstitial between Q23 and Q24.
+  if (code === CONCEPT_AFTER_QUESTION) {
+    setState((s) => ({
+      ...s,
+      stage: "concept",
+      lastActivity: new Date().toISOString(),
+    }));
+
+    return { ok: true };
+  }
+
+  const next = getNextQuestionCode(code, state.answers);
+
+  // Last question.
+  if (!next) {
+    setState((s) => ({
+      ...s,
+      stage: "thank-you",
+      completionStatus: "completed",
+      lastActivity: new Date().toISOString(),
+    }));
+
+    return { ok: true };
+  }
+
+  setState((s) => ({
+    ...s,
+    currentQuestionCode: next,
+    lastActivity: new Date().toISOString(),
+  }));
+
+  return { ok: true };
+}, [state]);
 
   const goBack = useCallback(() => {
     // If we're on the concept screen, go back to Q23.
