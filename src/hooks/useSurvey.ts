@@ -409,12 +409,6 @@ if (!updatedRespondent) {
 
 console.log("[completion] SUCCESS:", updatedRespondent);
 
-if (completionError) {
-  throw new Error(
-    `Completion update failed: ${completionError.message}`
-  );
-}
-
 const { data: verifyRespondent, error: verifyError } = await supabase
   .from("respondents")
   .select("id, completion_status, completed_at")
