@@ -447,9 +447,17 @@ useEffect(() => {
   completionStartedRef.current = respondentId;
 
   void submitCompletion().catch((e) => {
-    completionStartedRef.current = null;
-    console.error("[completion] failed", e);
-  });
+  completionStartedRef.current = null;
+  console.error("[completion] failed", e);
+
+  if (typeof window !== "undefined") {
+    window.alert(
+      `Completion failed: ${
+        e instanceof Error ? e.message : String(e)
+      }`
+    );
+  }
+});
 }, [state.stage, state.respondentId, submitCompletion]);
 
   // Mark abandoned if user leaves mid-survey.
