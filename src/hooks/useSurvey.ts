@@ -390,13 +390,24 @@ export function SurveyProvider({ children }: Props) {
       if (error) throw error;
     }
 
-    const { error: completionError } = await supabase
-  .from("respondents")
-  .update({
-    completion_status: "completed",
-    completed_at: new Date().toISOString(),
-  })
-  .eq("id", state.respondentId);
+    const { data: updatedRespondent, error: completionError } =
+  await supabase.rpc("complete_respondent", {
+    p_respondent_id: state.respondentId,
+  });
+
+if (completionError) {
+  throw new Error(
+    `Completion update failed: ${completionError.message}`
+  );
+}
+
+if (!updatedRespondent) {
+  throw new Error(
+    `Completion update returned no respondent. ID: ${state.respondentId}`
+  );
+}
+
+console.log("[completion] SUCCESS:", updatedRespondent);
 
 if (completionError) {
   throw new Error(
